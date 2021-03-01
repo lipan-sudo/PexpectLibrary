@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 import sys
 setup(
     name="PexpectLibrary",
-    version="0.0.1",
+    version="0.1.0",
     author="pan li",
     author_email="lipan.sudo@gmail.com",
     description="A pexpect wrapper for Robot Framework",
