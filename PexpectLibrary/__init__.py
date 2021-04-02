@@ -753,6 +753,22 @@ class PexpectLibrary(object):
         self._check_proc()
         return self._proc.child_fd
 
+    @staticmethod
+    def which(filename:str, env:Optional[Mapping[str, str]] = None):
+        '''This takes a given filename; tries to find it in the environment path;
+        then checks if it is executable. This returns the full path to the filename
+        if found and executable. Otherwise this returns None.
+
+        If `env' is not specified, use `os.environ' instead.
+
+        Example::
+
+        | ${path} | Which | java | { 'PATH': '/usr/lib/jvm/java-1.14.0-openjdk-amd64/bin' } |
+        | Log To Console | ${path} |
+
+        '''
+        return pexpect.which(filename, env)
+
 
 def run(*args, **kwargs):
     return pexpect.run(*args, **kwargs)
@@ -762,12 +778,8 @@ def runu(*args, **kwargs):
     return pexpect.runu(*args, **kwargs)
 
 
-def which(*args, **kwargs):
-    return pexpect.which(*args, **kwargs)
 
 
-def split_command_line(*args, **kwargs):
-    return pexpect.split_command_line(*args, **kwargs)
 
 
 class PexpectLibraryException(Exception):
