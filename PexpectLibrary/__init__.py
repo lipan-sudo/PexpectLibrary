@@ -377,8 +377,8 @@ class PexpectLibrary(object):
         child to finish. For example:
 
                 | `Spawn` | /bin/ls |
-                | Expect | ${{ pexpect.EOF }} |
-                | ${before} | Before |
+                | `Expect` | ${{ pexpect.EOF }} |
+                | ${before} | `Before` |
                 | Log To Console | ${before} |
 
         If you are trying to optimize for speed then see `Expect List` .
@@ -435,10 +435,10 @@ class PexpectLibrary(object):
         efficient to compile the patterns first and then call `Expect List`.
         This avoid calls in a loop to `Compile Pattern List`:
 
-             | ${cpl} | Compile Pattern List | my_pattern |
+             | ${cpl} | `Compile Pattern List` | my_pattern |
              | FOR | some conditions ... |
              | | ... |
-             | | ${i} | Expect List | ${cpl} | timeout |
+             | | ${i} | `Expect List` | ${cpl} | timeout |
              | | ... |
              | END |
 
@@ -473,10 +473,10 @@ class PexpectLibrary(object):
         Canonical input processing may be disabled altogether by executing
         a shell, then stty(1), before executing the final program:
 
-            | Spawn | /bin/bash | echo=False |
-            | Send Line | stty -icanon |
-            | Send Line | base64 |
-            | Send Line | ${{ 'x' * 5000 }} |
+            | `Spawn` | /bin/bash | echo=False |
+            | `Send Line` | stty -icanon |
+            | `Send Line` | base64 |
+            | `Send Line` | ${{ 'x' * 5000 }} |
         '''
         return self._check_and_run(lambda: self._proc.send(s))
 
@@ -563,7 +563,7 @@ class PexpectLibrary(object):
 
         The timeout refers only to the amount of time to read at least one
         character. This is not affected by the 'size' parameter, so if you call
-        | Read Nonblocking | size=100 | timeout=30 |
+        | `Read Nonblocking` | size=100 | timeout=30 |
         and only one character is
         available right away then one character will be returned immediately.
         It will not wait for 30 seconds for another 99 characters to come in.
@@ -579,7 +579,7 @@ class PexpectLibrary(object):
         return self._check_and_run(lambda: self._proc.read_nonblocking(size, timeout))
 
     def eof(self):
-        '''This returns True if the EOF exception was ever raised.
+        '''This returns True if the pexpect.EOF exception was ever raised.
         '''
         return self._check_and_run(lambda: self._proc.eof())
 
@@ -653,8 +653,8 @@ class PexpectLibrary(object):
         `sig' is the number of the signal, and can also be the name of the signal.
 
         | # The following 2 lines are equal. |
-        | Kill | SIGKILL |
-        | Kill | 9 |
+        | `Kill` | SIGKILL |
+        | `Kill` | 9 |
         '''
         try:
             sig = int(sig)
@@ -715,7 +715,7 @@ class PexpectLibrary(object):
     def get_echo(self):
         '''This returns the terminal echo mode. This returns True if echo is
         on or False if echo is off. Child applications that are expecting you
-        to enter a password often set ECHO False. See waitnoecho().
+        to enter a password often set ECHO False. See `Wait No ECHO` .
 
         Not supported on platforms where ``isatty()`` returns False.  '''
         return self._check_and_run(lambda: self._proc.getecho())
@@ -723,7 +723,7 @@ class PexpectLibrary(object):
     def set_echo(self, state: bool):
         '''This sets the terminal echo mode on or off. Note that anything the
         child sent before the echo will be lost, so you should be sure that
-        your input buffer is empty before you call setecho(). For example, the
+        your input buffer is empty before you call `Set ECHO` . For example, the
         following will work as expected:
 
             | `Spawn` | cat | # Echo is on by default. |
