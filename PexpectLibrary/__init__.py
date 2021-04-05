@@ -107,7 +107,7 @@ class PexpectLibrary(object):
         When the keyword argument ``timeout`` is specified,
         (default: *30*), then `pexpect.TIMEOUT` will be raised after the value
         specified has elapsed, in seconds, for any of the `Expect`
-        family of method calls.  When None, `pexpect.TIMEOUT` will not be raised, and
+        family of keyword calls.  When None, `pexpect.TIMEOUT` will not be raised, and
         `Expect` may block indefinitely until match.
 
         The logfile member turns on or off logging. All input and output will
@@ -409,7 +409,7 @@ class PexpectLibrary(object):
         '''This takes a list of compiled regular expressions and returns the
         index into the pattern_list that matched the child output. The list may
         also contain pexpect.EOF or pexpect.TIMEOUT(which are not compiled regular
-        expressions). This method is similar to the `Expect` keyword except that
+        expressions). This keyword is similar to the `Expect` keyword except that
         `Expect List` does not recompile the pattern list on every call. This
         may help if you are trying to optimize for speed, otherwise just use
         the `Expect` keyword.  This is called by `Expect`.
@@ -684,7 +684,7 @@ class PexpectLibrary(object):
         may have printed output then called exit(), but, the child is
         technically still alive until its output is read by the parent.
 
-        This method is non-blocking if `Wait` has already been called
+        This keyword is non-blocking if `Wait` has already been called
         previously or `Is Alive` keyword returns False.  It simply returns
         the previously determined exit status.
         '''
