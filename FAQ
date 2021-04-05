@@ -1,0 +1,3 @@
+Q: Why there's no pexpect.run() ?
+
+There are lots of alternatives, such as `Process.Run Process`, etc.

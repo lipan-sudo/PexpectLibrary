@@ -770,18 +770,6 @@ class PexpectLibrary(object):
         return pexpect.which(filename, env)
 
 
-def run(*args, **kwargs):
-    return pexpect.run(*args, **kwargs)
-
-
-def runu(*args, **kwargs):
-    return pexpect.runu(*args, **kwargs)
-
-
-
-
-
-
 class PexpectLibraryException(Exception):
     pass
 
