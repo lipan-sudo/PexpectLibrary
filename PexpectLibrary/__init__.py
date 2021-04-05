@@ -4,9 +4,7 @@ from typing import List, Union, Optional, Mapping, Callable, Any, Tuple
 from typing.io import IO
 
 import pexpect
-import robot
-from robot.utils import (is_string, is_integer, timestr_to_secs, is_truthy)
-
+from robot.utils import (timestr_to_secs)
 
 
 class PexpectLibrary(object):
@@ -25,7 +23,7 @@ class PexpectLibrary(object):
                 else:
                     try:
                         # for -1, etc.
-                        value = int(value)
+                        value = float(value)
                     except ValueError:
                         value = timestr_to_secs(value)
         return value
@@ -45,7 +43,7 @@ class PexpectLibrary(object):
     def spawn(self,
               command: str,
               args: List[str] = [],
-              timeout:Optional[timedelta] = timedelta(seconds=30),  # require RF >= 4.0
+              timeout: Optional[timedelta] = timedelta(seconds=30),  # require RF >= 4.0
               maxread: int = 2000,
               searchwindowsize: Optional[int] = None,
               logfile: Optional[IO] = None,
@@ -61,19 +59,17 @@ class PexpectLibrary(object):
         '''
         Spawn a new process, and set the active process to the new process.
         If current active process exists, kill it before spawning.
-        All the arguments will be passed to `pexpect.spawn()'.
 
         The command parameter may be a string that
-        includes a command and any arguments to the command. For example::
+        includes a command and any arguments to the command. For example:
 
         | `Spawn` | /usr/bin/ftp |
         | `Spawn` | /usr/bin/ssh user@example.com |
         | `Spawn` | ls -latr /tmp |
 
-        You may also construct it with a list of arguments like so::
+        You may also construct it with a list of arguments like so:
 
-        | @{args} | Create List | -latr | /tmp |
-        | `Spawn` | ls | ${args} |
+        | `Spawn` | ls | [ '-latr', '/tmp' ] |
 
         After this the child application will be created and will be ready to
         talk to. For normal use, see `Expect` and `Send` and `Send Line`.
@@ -81,19 +77,17 @@ class PexpectLibrary(object):
         Remember that Pexpect does NOT interpret shell meta characters such as
         redirect, pipe, or wild cards (``>``, ``|``, or ``*``). This is a
         common mistake.  If you want to run a command and pipe it through
-        another command then you must also start a shell. For example::
+        another command then you must also start a shell. For example:
 
-        | `Spawn` | /bin/bash -c "ls -l \| grep LOG > logs.txt" |
-        | `Expect` | ${{ pexpect.EOF }}
+        | `Spawn` | /bin/bash -c "ls -l > logs.txt" |
+        | `Expect` | ${{ pexpect.EOF }} |
 
         The second form of spawn (where you pass a list of arguments) is useful
         in situations where you wish to spawn a command and pass it its own
         argument list. This can make syntax more clear. For example, the
-        following is equivalent to the previous example::
+        following is equivalent to the previous example:
 
-        | ${shell_cmd} | Set Variable | ls -l \| grep LOG > logs.txt |
-        | @{args} | Create List | -c | ${shell_cmd} |
-        | `Spawn` | /bin/bash | ${args} |
+        | `Spawn` | /bin/bash | [ '-c', 'ls -l > logs.txt' ] |
         | `Expect` | ${{ pexpect.EOF }} |
 
         The maxread attribute sets the read buffer size. This is maximum number
@@ -111,9 +105,9 @@ class PexpectLibrary(object):
         size *maxread* irrespective of *searchwindowsize* value.
 
         When the keyword argument ``timeout`` is specified,
-        (default: *30*), then :class:`pexpect.TIMEOUT` will be raised after the value
+        (default: *30*), then `pexpect.TIMEOUT` will be raised after the value
         specified has elapsed, in seconds, for any of the `Expect`
-        family of method calls.  When None, TIMEOUT will not be raised, and
+        family of method calls.  When None, `pexpect.TIMEOUT` will not be raised, and
         `Expect` may block indefinitely until match.
 
         The logfile member turns on or off logging. All input and output will
@@ -121,33 +115,26 @@ class PexpectLibrary(object):
         logging. This is the default. Set logfile to sys.stdout to echo
         everything to standard output. The logfile is flushed after each write.
 
-        Example log input and output to a file::
+        Example log input and output to a file:
 
         | `Spawn` | some_command |
-        | ${fout} | Set Variable | ${{ open('mylog.txt','wb') }} |
-        | `Set Logfile` | ${fout} |
+        | `Set Logfile` | ${{ open('mylog.txt','wb') }} |
 
-        Example log to stdout::
+        Example log to stdout:
 
-        TODO already default to utf-8
-
-        # In Python 3, we'll use the ``encoding`` argument to decode data
-        # from the subprocess and handle it as unicode:
-        | `Spawn` | some_command | encoding=utf-8 |
-        | `Set Logfile` | ${{ sys.stdout }} |
+        | # In Python 3, we'll use the ``encoding`` argument to decode data |
+        | # from the subprocess and handle it as unicode: |
+        | `Spawn` | some_command | encoding=utf-8 | logfile=${{ sys.stdout }} |
 
         The logfile_read and logfile_send members can be used to separately log
         the input from the child and output sent to the child. Sometimes you
         don't want to see everything you write to the child. You only want to
-        log what the child sends back. For example::
+        log what the child sends back. For example:
 
-        | `Spawn` | some_command | encoding=utf-8 |
+        | `Spawn` | some_command |
         | `Set Logfile Read` | ${{ sys.stdout }} |
 
-        You will need to pass an encoding to spawn in the above code if you are
-        using Python 3.
-
-        To separately log output sent to the child use logfile_send::
+        To separately log output sent to the child use logfile_send:
 
         | `Set Logfile Send` | ${fout} |
 
@@ -175,12 +162,11 @@ class PexpectLibrary(object):
         It uses the same logic that "which" uses to find executables.
 
         If you wish to get the exit status of the child you must call the
-        close() method. The exit or signal status of the child will be stored
-        in self.exitstatus or self.signalstatus. If the child exited normally
+        `Close` keyword. The exit or signal status of the child will be stored
+        in `exitstatus` attribute or `signalstatus` attribute. If the child exited normally
         then exitstatus will store the exit return code and signalstatus will
         be None. If the child was terminated abnormally with a signal then
-        signalstatus will store the signal value and exitstatus will be None::
-
+        signalstatus will store the signal value and exitstatus will be None:
 
         | `Spawn` | some_command |
         | `Close` |
@@ -188,15 +174,15 @@ class PexpectLibrary(object):
         | ${signalstatus} | `Get Signal Status` |
         | Log To Console | ${exitstatus}, ${signalstatus} |
 
-        If you need more detail you can also read the self.status member which
+        If you need more detail you can also read the `status` attribute which
         stores the status returned by os.waitpid. You can interpret this using
         os.WIFEXITED/os.WEXITSTATUS or os.WIFSIGNALED/os.TERMSIG.
 
         The echo attribute may be set to False to disable echoing of input.
-        As a pseudo-terminal, all input echoed by the "keyboard" (send()
-        or sendline()) will be repeated to output.  For many cases, it is
+        As a pseudo-terminal, all input echoed by the "keyboard" ( `Send`
+        or `Send Line` ) will be repeated to output.  For many cases, it is
         not desirable to have echo enabled, and it may be later disabled
-        using setecho(False) followed by waitnoecho().  However, for some
+        using ``Set ECHO | FALSE`` followed by ``Wait No ECHO``.  However, for some
         platforms such as Solaris, this is not possible, and should be
         disabled immediately on spawn.
 
@@ -206,7 +192,7 @@ class PexpectLibrary(object):
 
         The dimensions attribute specifies the size of the pseudo-terminal as
         seen by the subprocess, and is specified as a two-entry tuple (rows,
-        columns). If this is unspecified, the defaults in ptyprocess will apply.
+        columns). If this is unspecified, the defaults will apply.
 
         The use_poll attribute enables using select.poll() over select.select()
         for socket handling. This is handy if your system could have > 1024 fds
@@ -214,16 +200,21 @@ class PexpectLibrary(object):
 
         timeout = self._timearg_to_seconds(timeout)
         return self._spawn(lambda: pexpect.spawn(command, args, timeout, maxread,
-                                          searchwindowsize, logfile, cwd, env,
-                                          ignore_sighup, echo, preexec_fn,
-                                          encoding, codec_errors, dimensions,
-                                          use_poll))
+                                                 searchwindowsize, logfile, cwd, env,
+                                                 ignore_sighup, echo, preexec_fn,
+                                                 encoding, codec_errors, dimensions,
+                                                 use_poll))
 
     def spawnu(self, *args, **kwargs):
         '''
         Deprecated. Same as `Spawn` .
         '''
         return self.spawn(*args, **kwargs)
+
+    def get_status(self):
+        '''Returns the `status' attribute.'''
+        self._check_proc()
+        return self._proc.status
 
     def get_exit_status(self):
         '''Returns the `exitstatus' attribute.'''
@@ -235,7 +226,47 @@ class PexpectLibrary(object):
         self._check_proc()
         return self._proc.signalstatus
 
-    def set_timeout(self, value:Optional[timedelta]):
+    def set_delay_after_read(self, value: Union[None, float, timedelta]):
+        '''Change the value of `delayafterread' attribute.'''
+        self._check_proc()
+        self._proc.delayafterread = self._timearg_to_seconds(value)
+
+    def get_delay_after_read(self):
+        '''Returns the `delayafterread' attribute.'''
+        self._check_proc()
+        return self._proc.delayafterread
+
+    def set_delay_before_send(self, value: Union[None, float, timedelta]):
+        '''Change the value of `delaybeforesend' attribute.'''
+        self._check_proc()
+        self._proc.delaybeforesend = self._timearg_to_seconds(value)
+
+    def get_delay_before_send(self):
+        '''Returns the `delaybeforesend' attribute.'''
+        self._check_proc()
+        return self._proc.delaybeforesend
+
+    def set_delay_after_close(self, value: Optional[timedelta]):
+        '''Change the value of `delayafterclose' attribute.'''
+        self._check_proc()
+        self._proc.delayafterclose = self._timearg_to_seconds(value)
+
+    def get_delay_after_close(self):
+        '''Returns the `delayafterclose' attribute.'''
+        self._check_proc()
+        return self._proc.delayafterclose
+
+    def set_delay_after_terminate(self, value: Optional[timedelta]):
+        '''Change the value of `delayafterterminate' attribute.'''
+        self._check_proc()
+        self._proc.delayafterterminate = self._timearg_to_seconds(value)
+
+    def get_delay_after_terminate(self):
+        '''Returns the `delayafterterminate' attribute.'''
+        self._check_proc()
+        return self._proc.delayafterterminate
+
+    def set_timeout(self, value: Optional[timedelta]):
         '''Change the value of `timeout' attribute.'''
         self._check_proc()
         self._proc.timeout = self._timearg_to_seconds(value)
@@ -250,7 +281,7 @@ class PexpectLibrary(object):
         self._check_proc()
         return self._proc.maxread
 
-    def set_maxread(self, value:int):
+    def set_maxread(self, value: int):
         '''Change the value of `maxread' attribute.'''
         self._check_proc()
         self._proc.maxread = value
@@ -285,8 +316,8 @@ class PexpectLibrary(object):
 
     def expect(self,
                pattern,
-               timeout:Union[None, int, timedelta] = -1,
-               searchwindowsize:int=-1,
+               timeout: Union[None, float, timedelta] = -1,
+               searchwindowsize: int = -1,
                **kwargs):
         '''This seeks through the stream until a pattern is matched. The
         pattern is overloaded and may take several types. The pattern can be a
@@ -300,14 +331,14 @@ class PexpectLibrary(object):
 
         If you pass a list of patterns and more than one matches, the first
         match in the stream is chosen. If more than one pattern matches at that
-        point, the leftmost in the pattern list is chosen. For example::
+        point, the leftmost in the pattern list is chosen. For example:
 
             | # the input is 'foobar' |
             | ${index} | `Expect` | ${{ ['bar', 'foo', 'foobar'] }} |
             | # returns 1('foo') even though 'foobar' is a "better" match |
 
         Please note, however, that buffering can affect this behavior, since
-        input arrives in unpredictable chunks. For example::
+        input arrives in unpredictable chunks. For example:
 
             | # the input is 'foobar' |
             | ${index} | `Expect` | ${{ ['foobar', 'foo'] }} |
@@ -334,7 +365,7 @@ class PexpectLibrary(object):
         catch these exceptions and return the index of the list entry instead
         of raising the exception. The attribute 'after' will be set to the
         exception type. The attribute 'match' will be None. This allows you to
-        write code like this::
+        write code like this:
 
                 | ${index} | `Expect` | ${{ ['good', 'bad', pexpect.EOF, pexpect.TIMEOUT] }} |
                 | Run Keyword If | ${index} == 0 | Do Something |
@@ -343,7 +374,7 @@ class PexpectLibrary(object):
                 | ... | ELSE IF | ${index} == 3 | Do Something Completely Different |
 
         You can also just expect the pexpect.EOF if you are waiting for all output of a
-        child to finish. For example::
+        child to finish. For example:
 
                 | `Spawn` | /bin/ls |
                 | Expect | ${{ pexpect.EOF }} |
@@ -355,9 +386,8 @@ class PexpectLibrary(object):
         timeout = self._timearg_to_seconds(timeout)
         return self._check_and_run(lambda: self._proc.expect(pattern, timeout, searchwindowsize, False, **kwargs))
 
-    def expect_exact(self, pattern_list, timeout:Union[None, int, timedelta] = -1,
-               searchwindowsize:int=-1,
-                     **kwargs):
+    def expect_exact(self, pattern_list, timeout: Union[None, float, timedelta] = -1,
+                     searchwindowsize: int = -1, **kwargs):
         '''This is similar to `Expect` , but uses plain string matching instead
         of compiled regular expressions in 'pattern_list'. The 'pattern_list'
         may be a string; a list or other sequence of strings; or pexpect.TIMEOUT and
@@ -372,10 +402,10 @@ class PexpectLibrary(object):
         '''
         timeout = self._timearg_to_seconds(timeout)
         return self._check_and_run(lambda: self._proc.expect_exact(pattern_list, timeout, searchwindowsize,
-                     False, **kwargs))
+                                                                   False, **kwargs))
 
-    def expect_list(self, pattern_list, timeout=-1, searchwindowsize=-1,
-                      **kwargs):
+    def expect_list(self, pattern_list, timeout: Union[None, float, timedelta] = -1, searchwindowsize: int = -1,
+                    **kwargs):
         '''This takes a list of compiled regular expressions and returns the
         index into the pattern_list that matched the child output. The list may
         also contain pexpect.EOF or pexpect.TIMEOUT(which are not compiled regular
@@ -386,7 +416,7 @@ class PexpectLibrary(object):
         '''
         timeout = self._timearg_to_seconds(timeout)
         return self._check_and_run(lambda: self._proc.expect_list(pattern_list, timeout, searchwindowsize,
-                    False,  **kwargs))
+                                                                  False, **kwargs))
 
     def compile_pattern_list(self, patterns):
         '''This compiles a pattern-string or a list of pattern-strings.
@@ -396,14 +426,14 @@ class PexpectLibrary(object):
         expecting any pattern).
 
         This is used by `Expect` when calling `Expect List`. Thus `Expect` is
-        nothing more than::
+        nothing more than:
 
              cpl = self.compile_pattern_list(pl)
              return self.expect_list(cpl, timeout)
 
         If you are using `Expect` within a loop it may be more
         efficient to compile the patterns first and then call `Expect List`.
-        This avoid calls in a loop to `Compile Pattern List`::
+        This avoid calls in a loop to `Compile Pattern List`:
 
              | ${cpl} | Compile Pattern List | my_pattern |
              | FOR | some conditions ... |
@@ -429,7 +459,7 @@ class PexpectLibrary(object):
         other systems honor the POSIX.1 definition PC_MAX_CANON -- 1024
         on OSX, 256 on OpenSolaris, and 1920 on FreeBSD.
 
-        This value may be discovered using fpathconf(3)::
+        This value may be discovered using fpathconf(3):
 
             | Log To Console | ${{ os.fpathconf(0, 'PC_MAX_CANON') }} |
             256
@@ -441,7 +471,7 @@ class PexpectLibrary(object):
         an option -- it behaves as though it is always set on.
 
         Canonical input processing may be disabled altogether by executing
-        a shell, then stty(1), before executing the final program::
+        a shell, then stty(1), before executing the final program:
 
             | Spawn | /bin/bash | echo=False |
             | Send Line | stty -icanon |
@@ -464,7 +494,7 @@ class PexpectLibrary(object):
         '''
         return self._check_and_run(lambda: self._proc.write(s))
 
-    def write_lines(self, sequence:List):
+    def write_lines(self, sequence: List):
         '''This calls `Write` for each element in the sequence. The sequence
         can be any iterable object producing strings, typically a list of
         strings. This does not add line separators. There is no return value.
@@ -474,7 +504,7 @@ class PexpectLibrary(object):
     def send_control(self, char):
         '''Helper keyword that wraps `Send` with mnemonic access for sending control
         character to the child (such as Ctrl-C or Ctrl-D).  For example, to send
-        Ctrl-G (ASCII 7, bell, '\a')::
+        Ctrl-G (ASCII 7, bell, '\a'):
 
             | `Send Control` | g |
 
@@ -498,7 +528,7 @@ class PexpectLibrary(object):
         the SIGINT to be the first character on a line. '''
         return self._check_and_run(lambda: self._proc.sendintr())
 
-    def read(self, size:int=-1):
+    def read(self, size: int = -1):
         '''This reads at most "size" bytes from the file (less if the read hits
         EOF before obtaining size bytes). If the size argument is negative or
         omitted, read all data until EOF is reached. The bytes are returned as
@@ -506,7 +536,7 @@ class PexpectLibrary(object):
         immediately. '''
         return self._check_and_run(lambda: self._proc.read(size))
 
-    def read_line(self, size:int=-1):
+    def read_line(self, size: int = -1):
         '''This reads and returns one entire line. The newline at the end of
         line is returned as part of the string, unless the file ends without a
         newline. An empty string is returned if EOF is encountered immediately.
@@ -519,7 +549,7 @@ class PexpectLibrary(object):
         behavior for a file-like object. '''
         return self._check_and_run(lambda: self._proc.readline(size))
 
-    def read_nonblocking(self, size:int=1, timeout:Union[None, int, timedelta] = -1):
+    def read_nonblocking(self, size: int = 1, timeout: Union[None, float, timedelta] = -1):
         '''This reads at most size characters from the child application. It
         includes a timeout. If the read does not complete within the timeout
         period then a pexpect.TIMEOUT exception is raised. If the end of file is read
@@ -554,7 +584,7 @@ class PexpectLibrary(object):
         return self._check_and_run(lambda: self._proc.eof())
 
     def interact(self, escape_character=chr(29),
-            input_filter=None, output_filter=None):
+                 input_filter=None, output_filter=None):
         '''This gives control of the child process to the interactive user (the
         human at the keyboard). Keystrokes are sent to the child process, and
         the stdout and stderr output of the child process is printed. This
@@ -582,7 +612,7 @@ class PexpectLibrary(object):
         signal will not be passed through to the child.
         '''
         return self._check_and_run(lambda: self._proc.interact(escape_character,
-            input_filter, output_filter))
+                                                               input_filter, output_filter))
 
     def get_logfile(self):
         '''Returns the `logfile' attribute.'''
@@ -614,7 +644,7 @@ class PexpectLibrary(object):
         self._check_proc()
         self._proc.logfile_send = value
 
-    def kill(self, sig:Union[int, str]=signal.SIGKILL):
+    def kill(self, sig: Union[int, str] = signal.SIGKILL):
         '''
         This sends the given signal to the child application. In keeping
         with UNIX tradition it has a misleading name. It does not necessarily
@@ -632,7 +662,7 @@ class PexpectLibrary(object):
             sig = signal.__dict__[str(sig)].value
         return self._check_and_run(lambda: self._proc.kill(sig))
 
-    def terminate(self, force:bool=False):
+    def terminate(self, force: bool = False):
         '''This forces a child process to terminate. It starts nicely with
         SIGHUP and SIGINT. If "force" is True then moves onto SIGKILL. This
         returns True if the child was terminated. This returns False if the
@@ -661,7 +691,7 @@ class PexpectLibrary(object):
 
         return self._check_and_run(lambda: self._proc.wait())
 
-    def close(self, force:bool=True):
+    def close(self, force: bool = True):
         '''This closes the connection with the child application. Note that
         calling `Close` more than once is valid. This emulates standard Python
         behavior with files. Set force to True if you want to make sure that
@@ -674,7 +704,7 @@ class PexpectLibrary(object):
         value is a tuple of (rows, cols). '''
         return self._check_and_run(lambda: self._proc.getwinsize())
 
-    def set_terminal_window_size(self, rows:int, cols:int):
+    def set_terminal_window_size(self, rows: int, cols: int):
         '''This sets the terminal window size of the child tty. This will cause
         a SIGWINCH signal to be sent to the child. This does not change the
         physical window size. It changes the size reported to TTY-aware
@@ -690,11 +720,11 @@ class PexpectLibrary(object):
         Not supported on platforms where ``isatty()`` returns False.  '''
         return self._check_and_run(lambda: self._proc.getecho())
 
-    def set_echo(self, state:bool):
+    def set_echo(self, state: bool):
         '''This sets the terminal echo mode on or off. Note that anything the
         child sent before the echo will be lost, so you should be sure that
         your input buffer is empty before you call setecho(). For example, the
-        following will work as expected::
+        following will work as expected:
 
             | `Spawn` | cat | # Echo is on by default. |
             | `Send Line` | 1234 | # We expect see this twice from the child... |
@@ -707,7 +737,7 @@ class PexpectLibrary(object):
             | `Expect` | ${{ ['wxyz'] }} |
 
         The following WILL NOT WORK because the lines sent before the setecho
-        will be lost::
+        will be lost:
 
             | `Spawn` | cat |
             | `Send Line` | 1234 |
@@ -724,21 +754,21 @@ class PexpectLibrary(object):
         '''
         return self._check_and_run(lambda: self._proc.setecho(state))
 
-    def wait_no_echo(self, timeout=-1):
+    def wait_no_echo(self, timeout: Union[None, float, timedelta] = -1):
         '''This waits until the terminal ECHO flag is set False. This returns
         True if the echo mode is off. This returns False if the ECHO flag was
         not set False before the timeout. This can be used to detect when the
         child is waiting for a password. Usually a child application will turn
         off echo mode when it is waiting for the user to enter a password. For
         example, instead of expecting the "password:" prompt you can wait for
-        the child to set ECHO off::
+        the child to set ECHO off:
 
             | `Spawn` | ssh user@example.com |
             | `Wait No Echo` |
             | `Send Line` | mypassword |
 
-        If timeout==-1 then this method will use the value in self.timeout.
-        If timeout==None then this method to block until ECHO flag is False.
+        If timeout==-1 then this keyword will use the value in timeout attribute.
+        If timeout==None then this keyword to block until ECHO flag is False.
         '''
         timeout = self._timearg_to_seconds(timeout)
         return self._check_and_run(lambda: self._proc.waitnoecho(timeout))
@@ -754,14 +784,14 @@ class PexpectLibrary(object):
         return self._proc.child_fd
 
     @staticmethod
-    def which(filename:str, env:Optional[Mapping[str, str]] = None):
+    def which(filename: str, env: Optional[Mapping[str, str]] = None):
         '''This takes a given filename; tries to find it in the environment path;
         then checks if it is executable. This returns the full path to the filename
         if found and executable. Otherwise this returns None.
 
         If `env' is not specified, use `os.environ' instead.
 
-        Example::
+        Example:
 
         | ${path} | Which | java | { 'PATH': '/usr/lib/jvm/java-1.14.0-openjdk-amd64/bin' } |
         | Log To Console | ${path} |
