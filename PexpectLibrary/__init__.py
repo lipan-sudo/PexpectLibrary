@@ -321,12 +321,12 @@ class PexpectLibrary(object):
                **kwargs):
         '''This seeks through the stream until a pattern is matched. The
         pattern is overloaded and may take several types. The pattern can be a
-        StringType, pexpect.EOF, a compiled re, or a list of any of those types.
+        StringType, pexpect.EOF, pexpect.TIMEOUT, a compiled re, or a list of any of those types.
         Strings will be compiled to re types. This returns the index into the
         pattern list. If the pattern was not a list this returns index 0 on a
-        successful match. This may raise exceptions for pexpect.EOF or pexpect.TIMEOUT. To
+        successful match. This may raise exceptions for EOF or TIMEOUT. To
         avoid the pexpect.EOF or pexpect.TIMEOUT exceptions add pexpect.EOF or pexpect.TIMEOUT to the pattern
-        list. That will cause expect to match an pexpect.EOF or pexpect.TIMEOUT condition
+        list. That will cause expect to match an EOF or TIMEOUT condition
         instead of raising an exception.
 
         If you pass a list of patterns and more than one matches, the first
