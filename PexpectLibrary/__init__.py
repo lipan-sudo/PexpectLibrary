@@ -4,6 +4,7 @@ from typing import List, Union, Optional, Mapping, Callable, Any, Tuple
 from typing.io import IO
 
 import pexpect
+from pexpect import fdpexpect
 from robot.utils import (timestr_to_secs)
 
 
@@ -34,7 +35,7 @@ class PexpectLibrary(object):
     time format used in Robot Framework's standard library, like '5 seconds', etc.
     '''
 
-    _proc: Optional[pexpect.spawn]
+    _proc: Union[None, pexpect.spawn, fdpexpect.fdspawn]
 
     def __init__(self):
         self._proc = None
@@ -58,8 +59,12 @@ class PexpectLibrary(object):
         try:
             # Kill the current active process
             if self._proc is not None:
-                if self._proc.isalive():
-                    self._proc.kill(signal.SIGKILL)
+                if isinstance(self._proc, pexpect.spawn):
+                    if self._proc.isalive():
+                        self._proc.kill(signal.SIGKILL)
+                elif isinstance(self._proc, fdpexpect.fdspawn):
+                    if self._proc.isalive():
+                        self._proc.close()
             self._proc = do_spawn()
             return self._proc
         except:
@@ -238,6 +243,24 @@ class PexpectLibrary(object):
         Deprecated. Same as `Spawn` .
         '''
         return self.spawn(*args, **kwargs)
+
+    def fd_spawn(self,
+                 fd,
+                 timeout: Optional[timedelta] = timedelta(seconds=30),
+                 maxread: int = 2000,
+                 searchwindowsize: Optional[int] = None,
+                 logfile: Optional[IO] = None,
+                 encoding: Optional[str] = 'utf-8',
+                 codec_errors: Any = 'strict',
+                 use_poll: bool = False):
+        '''This takes a file descriptor (an int) or an object that support the
+        fileno() method (returning an int). All Python file-like objects
+        support fileno(). '''
+        timeout = self._timearg_to_seconds(timeout)
+        return self._spawn(lambda: fdpexpect.fdspawn(fd=fd, args=None, timeout=timeout, maxread=maxread,
+                                                     searchwindowsize=searchwindowsize,
+                                                     logfile=logfile, encoding=encoding, codec_errors=codec_errors,
+                                                     use_poll=use_poll))
 
     def get_status(self):
         '''Returns the `status' attribute.'''
