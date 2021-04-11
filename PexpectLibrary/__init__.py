@@ -8,6 +8,32 @@ from robot.utils import (timestr_to_secs)
 
 
 class PexpectLibrary(object):
+    '''
+    PexpetLibrary is a Pexpect wrapper for Robot Framework.
+
+    This document explains how to use keywords provided by PexpectLibrary.
+    For information about installation, support, and more, please visit the
+    [https://github.com/lipan-sudo/PexpectLibrary|project pages].
+    For more information about Robot Framework, see http://robotframework.org.
+
+    The use of PexpectLibrary is as simple as Pexpect. Nearly all keywords has the same
+    usage as the corresponding methods in Pexpect library, with a more convenience way.
+
+    %TOC%
+
+    = Active Process =
+
+    All keywords in PexpectLibrary that need to interact with a process,
+    should `Spawn` a new process first. This process will become the *active process*.
+    These keywords no need to specify which process to interact with, they just
+    interact with the current active process.
+
+    = Time Format =
+
+    All time arguments which has timedelta type in PexpectLibrary, can use the
+    time format used in Robot Framework's standard library, like '5 seconds', etc.
+    '''
+
     _proc: Optional[pexpect.spawn]
 
     def __init__(self):
@@ -58,7 +84,7 @@ class PexpectLibrary(object):
               use_poll: bool = False):
         '''
         Spawn a new process, and set the active process to the new process.
-        If current active process exists, kill it before spawning.
+        If current active process exists, it would be killed before spawning.
 
         The command parameter may be a string that
         includes a command and any arguments to the command. For example:
@@ -143,8 +169,8 @@ class PexpectLibrary(object):
         will be handled normally by the child.
 
         The delaybeforesend helps overcome a weird behavior that many users
-        were experiencing. The typical problem was that a user would expect() a
-        "Password:" prompt and then immediately call sendline() to send the
+        were experiencing. The typical problem was that a user would `Expect` a
+        "Password:" prompt and then immediately call `Send Line` to send the
         password. The user would then see that their password was echoed back
         to them. Passwords don't normally echo. The problem is caused by the
         fact that most applications print out the "Password" prompt and then
@@ -158,8 +184,8 @@ class PexpectLibrary(object):
         second (50 ms) seems to be enough to clear up the problem. You can set
         delaybeforesend to None to return to the old behavior.
 
-        Note that spawn is clever about finding commands on your path.
-        It uses the same logic that "which" uses to find executables.
+        Note that `Spawn` is clever about finding commands on your path.
+        It uses the same logic that `Which` uses to find executables.
 
         If you wish to get the exit status of the child you must call the
         `Close` keyword. The exit or signal status of the child will be stored
@@ -182,7 +208,9 @@ class PexpectLibrary(object):
         As a pseudo-terminal, all input echoed by the "keyboard" ( `Send`
         or `Send Line` ) will be repeated to output.  For many cases, it is
         not desirable to have echo enabled, and it may be later disabled
-        using ``Set ECHO | FALSE`` followed by ``Wait No ECHO``.  However, for some
+        using
+        | `Set ECHO` | FALSE |
+        followed by `Wait No ECHO`.  However, for some
         platforms such as Solaris, this is not possible, and should be
         disabled immediately on spawn.
 
@@ -325,7 +353,7 @@ class PexpectLibrary(object):
         Strings will be compiled to re types. This returns the index into the
         pattern list. If the pattern was not a list this returns index 0 on a
         successful match. This may raise exceptions for EOF or TIMEOUT. To
-        avoid the pexpect.EOF or pexpect.TIMEOUT exceptions add pexpect.EOF or pexpect.TIMEOUT to the pattern
+        avoid the EOF or TIMEOUT exceptions add pexpect.EOF or pexpect.TIMEOUT to the pattern
         list. That will cause expect to match an EOF or TIMEOUT condition
         instead of raising an exception.
 
@@ -346,7 +374,7 @@ class PexpectLibrary(object):
             | # but returns 1('foo') if parts of the final 'bar' arrive late |
 
         When a match is found for the given pattern, the
-        attribute *match* becomes an re.MatchObject result.  Should an pexpect.EOF
+        attribute *match* becomes an re.MatchObject result.  Should a pexpect.EOF
         or pexpect.TIMEOUT pattern match, then the match attribute will be an instance
         of that exception class.  The pairing before and after attributes are views of the data preceding and following
         the matching pattern.  On general exception, attribute
@@ -428,8 +456,9 @@ class PexpectLibrary(object):
         This is used by `Expect` when calling `Expect List`. Thus `Expect` is
         nothing more than:
 
-             cpl = self.compile_pattern_list(pl)
-             return self.expect_list(cpl, timeout)
+
+        | cpl = self.compile_pattern_list(pl)
+        | return self.expect_list(cpl, timeout)
 
         If you are using `Expect` within a loop it may be more
         efficient to compile the patterns first and then call `Expect List`.
@@ -462,10 +491,10 @@ class PexpectLibrary(object):
         This value may be discovered using fpathconf(3):
 
             | Log To Console | ${{ os.fpathconf(0, 'PC_MAX_CANON') }} |
-            256
+        ==> 256
 
         On such a system, only 256 bytes may be received per line. Any
-        subsequent bytes received will be discarded. BEL (``'\a'``) is then
+        subsequent bytes received will be discarded. BEL (``'\\a'``) is then
         sent to output if IMAXBEL (termios.h) is set by the tty driver.
         This is usually enabled by default.  Linux does not honor this as
         an option -- it behaves as though it is always set on.
@@ -504,7 +533,7 @@ class PexpectLibrary(object):
     def send_control(self, char):
         '''Helper keyword that wraps `Send` with mnemonic access for sending control
         character to the child (such as Ctrl-C or Ctrl-D).  For example, to send
-        Ctrl-G (ASCII 7, bell, '\a'):
+        Ctrl-G (ASCII 7, bell, '\\a'):
 
             | `Send Control` | g |
 
@@ -557,7 +586,7 @@ class PexpectLibrary(object):
         copy is written to that log.
 
         If timeout is None then the read may block indefinitely.
-        If timeout is -1 then the self.timeout value is used. If timeout is 0
+        If timeout is -1 then the timeout attribute is used. If timeout is 0
         then the child is polled and if there is no data immediately ready
         then this will raise a pexpect.TIMEOUT exception.
 
@@ -650,9 +679,8 @@ class PexpectLibrary(object):
         with UNIX tradition it has a misleading name. It does not necessarily
         kill the child unless you send the right signal.
 
-        `sig' is the number of the signal, and can also be the name of the signal.
+        ``sig`` is the number of the signal, also, can be the name of the signal. The following 2 lines are equal:
 
-        | # The following 2 lines are equal. |
         | `Kill` | SIGKILL |
         | `Kill` | 9 |
         '''
@@ -728,13 +756,13 @@ class PexpectLibrary(object):
 
             | `Spawn` | cat | # Echo is on by default. |
             | `Send Line` | 1234 | # We expect see this twice from the child... |
-            | `Expect` | ${{ [ '1234' ] }} | # ... once from the tty echo... |
-            | `Expect` | ${{ ['1234'] }} | # ... and again from cat itself. |
+            | `Expect` | 1234 | # ... once from the tty echo... |
+            | `Expect` | 1234 | # ... and again from cat itself. |
             | `Set Echo` | FALSE | # Turn off tty echo |
             | `Send Line` | abcd | # We will set this only once (echoed by cat). |
             | `Send Line` | wxyz | # We will set this only once (echoed by cat) |
-            | `Expect` | ${{ [ 'abcd' ] }} |
-            | `Expect` | ${{ ['wxyz'] }} |
+            | `Expect` | abcd |
+            | `Expect` | wxyz |
 
         The following WILL NOT WORK because the lines sent before the setecho
         will be lost:
@@ -744,10 +772,10 @@ class PexpectLibrary(object):
             | `Set Echo` | FALSE | # Turn off tty echo |
             | `Send Line` | abcd | # We will set this only once (echoed by cat). |
             | `Send Line` | wxyz | # We will set this only once (echoed by cat) |
-            | `Expect` | ${{ ['1234'] }} |
-            | `Expect` | ${{ ['1234'] }} |
-            | `Expect` | ${{ ['abcd'] }} |
-            | `Expect` | ${{ ['wxyz'] }} |
+            | `Expect` | 1234 |
+            | `Expect` | 1234 |
+            | `Expect` | abcd |
+            | `Expect` | wxyz |
 
 
         Not supported on platforms where ``isatty()`` returns False.
@@ -789,11 +817,11 @@ class PexpectLibrary(object):
         then checks if it is executable. This returns the full path to the filename
         if found and executable. Otherwise this returns None.
 
-        If `env' is not specified, use `os.environ' instead.
+        If `env` is not specified, use `os.environ` instead.
 
         Example:
 
-        | ${path} | Which | java | { 'PATH': '/usr/lib/jvm/java-1.14.0-openjdk-amd64/bin' } |
+        | ${path} | `Which` | java | { 'PATH': '/usr/lib/jvm/java-1.14.0-openjdk-amd64/bin' } |
         | Log To Console | ${path} |
 
         '''
