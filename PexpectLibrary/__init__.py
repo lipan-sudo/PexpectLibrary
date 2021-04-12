@@ -1,12 +1,14 @@
+import os
 import signal
 from datetime import timedelta
 from typing import List, Union, Optional, Mapping, Callable, Any, Tuple
-from typing.io import IO
 
 import pexpect
 from pexpect import fdpexpect
 from robot.utils import (timestr_to_secs)
+from typing.io import IO
 
+from PexpectLibrary.serialspawn import SerialSpawn
 
 class PexpectLibrary(object):
     '''
@@ -33,9 +35,20 @@ class PexpectLibrary(object):
 
     All time arguments which has timedelta type in PexpectLibrary, can use the
     time format used in Robot Framework's standard library, like '5 seconds', etc.
+
+    = Using Serial Ports =
+
+    To interact with serial ports on Windows platform, use `Serial Spawn`.
+    This keyword use pyserial to interact with serial ports. `Serial Spawn`
+    can also be used in other platforms.
+
+    For *nix platforms, use `Fd Spawn` to interact with serial ports.
     '''
 
-    _proc: Union[None, pexpect.spawn, fdpexpect.fdspawn]
+    if os.name == 'nt':  # sys.platform == 'win32':
+        _proc: Union[None, fdpexpect.fdspawn, SerialSpawn]
+    else:
+        _proc: Union[None, pexpect.spawn, fdpexpect.fdspawn, SerialSpawn]
 
     def __init__(self):
         self._proc = None
@@ -59,10 +72,11 @@ class PexpectLibrary(object):
         try:
             # Kill the current active process
             if self._proc is not None:
-                if isinstance(self._proc, pexpect.spawn):
-                    if self._proc.isalive():
-                        self._proc.kill(signal.SIGKILL)
-                elif isinstance(self._proc, fdpexpect.fdspawn):
+                if os.name != 'nt':  # sys.platform == 'win32':
+                    if isinstance(self._proc, pexpect.spawn):
+                        if self._proc.isalive():
+                            self._proc.kill(signal.SIGKILL)
+                if isinstance(self._proc, (fdpexpect.fdspawn, SerialSpawn)):
                     if self._proc.isalive():
                         self._proc.close()
             self._proc = do_spawn()
@@ -261,6 +275,31 @@ class PexpectLibrary(object):
                                                      searchwindowsize=searchwindowsize,
                                                      logfile=logfile, encoding=encoding, codec_errors=codec_errors,
                                                      use_poll=use_poll))
+
+    def serial_spawn(self,
+                     # for serial.Serial
+                     port: str,
+                     serial_config: Mapping[str, Any] = {},
+                     # for SpawnBase:
+                     timeout: Optional[timedelta] = timedelta(seconds=30),
+                     maxread: int = 2000,
+                     searchwindowsize: Optional[int] = None,
+                     logfile: Optional[IO] = None,
+                     encoding: Optional[str] = 'utf-8',
+                     codec_errors: Any = 'strict'):
+        '''This is like `Fd Spawn` but allows you to communicate with a serial port using
+        pyserial, even on Windows. Arguments pass to serial.Serial() can be specified using
+        *serial_config*.
+
+        Example:
+
+        | `Serial Spawn` | COM11 | { 'baudrate': 115200 } |
+
+        '''
+        timeout = self._timearg_to_seconds(timeout)
+        return self._spawn(lambda: SerialSpawn(port=port, serial_config=serial_config, timeout=timeout, maxread=maxread,
+                                               searchwindowsize=searchwindowsize, logfile=logfile, encoding=encoding,
+                                               codec_errors=codec_errors))
 
     def get_status(self):
         '''Returns the `status' attribute.'''
@@ -696,22 +735,23 @@ class PexpectLibrary(object):
         self._check_proc()
         self._proc.logfile_send = value
 
-    def kill(self, sig: Union[int, str] = signal.SIGKILL):
-        '''
-        This sends the given signal to the child application. In keeping
-        with UNIX tradition it has a misleading name. It does not necessarily
-        kill the child unless you send the right signal.
+    if os.name != 'nt':  # sys.platform == 'win32':
+        def kill(self, sig: Union[int, str] = signal.SIGKILL):
+            '''
+            This sends the given signal to the child application. In keeping
+            with UNIX tradition it has a misleading name. It does not necessarily
+            kill the child unless you send the right signal.
 
-        ``sig`` is the number of the signal, also, can be the name of the signal. The following 2 lines are equal:
+            ``sig`` is the number of the signal, also, can be the name of the signal. The following 2 lines are equal:
 
-        | `Kill` | SIGKILL |
-        | `Kill` | 9 |
-        '''
-        try:
-            sig = int(sig)
-        except ValueError:
-            sig = signal.__dict__[str(sig)].value
-        return self._check_and_run(lambda: self._proc.kill(sig))
+            | `Kill` | SIGKILL |
+            | `Kill` | 9 |
+            '''
+            try:
+                sig = int(sig)
+            except ValueError:
+                sig = signal.__dict__[str(sig)].value
+            return self._check_and_run(lambda: self._proc.kill(sig))
 
     def terminate(self, force: bool = False):
         '''This forces a child process to terminate. It starts nicely with

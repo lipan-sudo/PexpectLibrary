@@ -13,7 +13,7 @@ setup(
     license="MIT",
     url="https://github.com/lipan-sudo/PexpectLibrary",
     # packages=['iniConfig'],
-    packages=find_packages(exclude=['tests*']),
+    packages=find_packages(exclude=['tests*', 'examples']),
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
@@ -33,6 +33,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'pexpect>=4.6.0',
-        'robotframework>=3.2.2'
+        'robotframework>=3.2.2',
+        'pyserial>=3.5'
     ]
 )
