@@ -2,13 +2,14 @@ import os
 import signal
 from datetime import timedelta
 from typing import List, Union, Optional, Mapping, Callable, Any, Tuple
+from typing.io import IO
 
 import pexpect
 from pexpect import fdpexpect
 from robot.utils import (timestr_to_secs)
-from typing.io import IO
 
 from PexpectLibrary.serialspawn import SerialSpawn
+
 
 class PexpectLibrary(object):
     '''
@@ -31,6 +32,9 @@ class PexpectLibrary(object):
     These keywords no need to specify which process to interact with, they just
     interact with the current active process.
 
+    The active process can be changed at anytime. The keywords `Current Active Process`
+    and `Set Active Process` can be used to switch between active processes.
+
     = Time Format =
 
     All time arguments which has timedelta type in PexpectLibrary, can use the
@@ -42,7 +46,7 @@ class PexpectLibrary(object):
     This keyword use pyserial to interact with serial ports. `Serial Spawn`
     can also be used in other platforms.
 
-    For *nix platforms, use `Fd Spawn` to interact with serial ports.
+    For *nix platforms, `Fd Spawn` can also be used to interact with serial ports.
     '''
 
     if os.name == 'nt':  # sys.platform == 'win32':
@@ -267,7 +271,11 @@ class PexpectLibrary(object):
                  encoding: Optional[str] = 'utf-8',
                  codec_errors: Any = 'strict',
                  use_poll: bool = False):
-        '''This takes a file descriptor (an int) or an object that support the
+        '''This is like `Spawn` but allows you to supply your own open file
+        descriptor. For example, you could use it to read through a file looking
+        for patterns, or to control a modem or serial device.
+
+        This takes a file descriptor (an int) or an object that support the
         fileno() method (returning an int). All Python file-like objects
         support fileno(). '''
         timeout = self._timearg_to_seconds(timeout)
@@ -300,6 +308,24 @@ class PexpectLibrary(object):
         return self._spawn(lambda: SerialSpawn(port=port, serial_config=serial_config, timeout=timeout, maxread=maxread,
                                                searchwindowsize=searchwindowsize, logfile=logfile, encoding=encoding,
                                                codec_errors=codec_errors))
+
+    def current_active_process(self):
+        '''Returns current active process.'''
+        return self._proc
+
+    def set_active_process(self, proc=None):
+        '''Returns current active process, and switch active process to *proc* .
+
+        If *proc* is None (default), clear current active process. This can be used to avoid
+        current active process to be closed automatically before spawning a new process. For
+        example:
+
+        | `Set Active Process` |
+        | `Spawn` | ... |
+        '''
+        current = self._proc
+        self._proc = proc
+        return current
 
     def get_status(self):
         '''Returns the `status' attribute.'''
