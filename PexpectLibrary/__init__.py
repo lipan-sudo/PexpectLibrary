@@ -9,6 +9,7 @@ from robot.utils import (timestr_to_secs)
 
 from PexpectLibrary.serialspawn import SerialSpawn
 
+__version__ = "0.2.0"
 
 class PexpectLibrary(object):
     '''
@@ -47,6 +48,8 @@ class PexpectLibrary(object):
 
     For *nix platforms, `Fd Spawn` can also be used to interact with serial ports.
     '''
+
+    ROBOT_LIBRARY_VERSION = __version__
 
     if os.name == 'nt':  # sys.platform == 'win32':
         _proc: Union[None, fdpexpect.fdspawn, SerialSpawn, popen_spawn.PopenSpawn]
