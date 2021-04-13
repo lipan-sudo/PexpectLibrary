@@ -49,9 +49,9 @@ class PexpectLibrary(object):
     '''
 
     if os.name == 'nt':  # sys.platform == 'win32':
-        _proc: Union[None, fdpexpect.fdspawn, SerialSpawn]
+        _proc: Union[None, fdpexpect.fdspawn, SerialSpawn, popen_spawn.PopenSpawn]
     else:
-        _proc: Union[None, pexpect.spawn, fdpexpect.fdspawn, SerialSpawn]
+        _proc: Union[None, pexpect.spawn, fdpexpect.fdspawn, SerialSpawn, popen_spawn.PopenSpawn]
 
     def __init__(self):
         self._proc = None
