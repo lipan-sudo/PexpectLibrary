@@ -34,7 +34,7 @@ keyword `Process.Run Process`.
 
 * class `pexpect.replwrap.REPLWrapper`
   
-  The usage of this class is quite different with other classes. A new library with different name may better.
+  The usage of this class is quite different from other classes. A new library with different name may better.
   This may be added in the future.
 
 * class `pexpect.pxssh.pxssh`
