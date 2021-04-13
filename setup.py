@@ -9,10 +9,9 @@ setup(
     version="0.2.0",
     author="pan li",
     author_email="lipan.sudo@gmail.com",
-    description="A pexpect wrapper for Robot Framework",
+    description="An (almost) complete and convenience Pexpect wrapper for Robot Framework, with extra functionalities.",
     license="MIT",
     url="https://github.com/lipan-sudo/PexpectLibrary",
-    # packages=['iniConfig'],
     packages=find_packages(exclude=['tests*', 'examples']),
     classifiers=[
         # How mature is this project? Common values are
