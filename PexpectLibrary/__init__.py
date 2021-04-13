@@ -86,9 +86,14 @@ class PexpectLibrary(object):
                     if isinstance(self._proc, pexpect.spawn):
                         if self._proc.isalive():
                             self._proc.kill(signal.SIGKILL)
+                            self._proc.wait()
                 if isinstance(self._proc, (fdpexpect.fdspawn, SerialSpawn)):
                     if self._proc.isalive():
                         self._proc.close()
+                if isinstance(self._proc, popen_spawn.PopenSpawn):
+                    if self._proc.isalive():
+                        self.kill()
+                        self.wait()
             self._proc = do_spawn()
             return self._proc
         except:
