@@ -1,11 +1,10 @@
 import os
 import signal
 from datetime import timedelta
-from typing import List, Union, Optional, Mapping, Callable, Any, Tuple
-from typing.io import IO
+from typing import List, Union, Optional, Mapping, Callable, Any, Tuple, IO
 
 import pexpect
-from pexpect import fdpexpect
+from pexpect import fdpexpect, popen_spawn
 from robot.utils import (timestr_to_secs)
 
 from PexpectLibrary.serialspawn import SerialSpawn
@@ -283,6 +282,31 @@ class PexpectLibrary(object):
                                                      searchwindowsize=searchwindowsize,
                                                      logfile=logfile, encoding=encoding, codec_errors=codec_errors,
                                                      use_poll=use_poll))
+
+    def popen_spawn(self,
+                    cmd,
+                    timeout: Optional[timedelta] = timedelta(seconds=30),
+                    maxread: int = 2000,
+                    searchwindowsize: Optional[int] = None,
+                    logfile: Optional[IO] = None,
+                    cwd: Optional[str] = None,
+                    env: Optional[Mapping[str, str]] = None,
+                    encoding: Optional[str] = 'utf-8',
+                    codec_errors: Any = 'strict',
+                    preexec_fn: Optional[Callable[[], Any]] = None):
+        '''Provides an interface like `Spawn` keyword using subprocess.Popen.'''
+        timeout = self._timearg_to_seconds(timeout)
+        return self._spawn(lambda: popen_spawn.PopenSpawn(cmd=cmd,
+                                                          timeout=timeout,
+                                                          maxread=maxread,
+                                                          searchwindowsize=searchwindowsize,
+                                                          logfile=logfile,
+                                                          cwd=cwd,
+                                                          env=env,
+                                                          encoding=encoding,
+                                                          codec_errors=codec_errors,
+                                                          preexec_fn=preexec_fn
+                                                          ))
 
     def serial_spawn(self,
                      # for serial.Serial
