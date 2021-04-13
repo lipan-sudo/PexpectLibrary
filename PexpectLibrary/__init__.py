@@ -71,6 +71,13 @@ class PexpectLibrary(object):
                         value = timestr_to_secs(value)
         return value
 
+    def _optional_arg_conversion(self, value):
+        # for rf < 4.0.1
+        if value is not None:
+            if isinstance(value, str) and (value.upper() == 'NONE'):
+                value = None
+        return value
+
     def _spawn(self, do_spawn):
         try:
             # Kill the current active process
@@ -247,7 +254,7 @@ class PexpectLibrary(object):
         The use_poll attribute enables using select.poll() over select.select()
         for socket handling. This is handy if your system could have > 1024 fds
         '''
-
+        encoding = self._optional_arg_conversion(encoding)
         timeout = self._timearg_to_seconds(timeout)
         return self._spawn(lambda: pexpect.spawn(command, args, timeout, maxread,
                                                  searchwindowsize, logfile, cwd, env,
@@ -277,6 +284,7 @@ class PexpectLibrary(object):
         This takes a file descriptor (an int) or an object that support the
         fileno() method (returning an int). All Python file-like objects
         support fileno(). '''
+        encoding = self._optional_arg_conversion(encoding)
         timeout = self._timearg_to_seconds(timeout)
         return self._spawn(lambda: fdpexpect.fdspawn(fd=fd, args=None, timeout=timeout, maxread=maxread,
                                                      searchwindowsize=searchwindowsize,
@@ -295,6 +303,7 @@ class PexpectLibrary(object):
                     codec_errors: Any = 'strict',
                     preexec_fn: Optional[Callable[[], Any]] = None):
         '''Provides an interface like `Spawn` keyword using subprocess.Popen.'''
+        encoding = self._optional_arg_conversion(encoding)
         timeout = self._timearg_to_seconds(timeout)
         return self._spawn(lambda: popen_spawn.PopenSpawn(cmd=cmd,
                                                           timeout=timeout,
@@ -328,6 +337,7 @@ class PexpectLibrary(object):
         | `Serial Spawn` | COM11 | { 'baudrate': 115200 } |
 
         '''
+        encoding = self._optional_arg_conversion(encoding)
         timeout = self._timearg_to_seconds(timeout)
         return self._spawn(lambda: SerialSpawn(port=port, serial_config=serial_config, timeout=timeout, maxread=maxread,
                                                searchwindowsize=searchwindowsize, logfile=logfile, encoding=encoding,
@@ -785,23 +795,24 @@ class PexpectLibrary(object):
         self._check_proc()
         self._proc.logfile_send = value
 
-    if os.name != 'nt':  # sys.platform == 'win32':
-        def kill(self, sig: Union[int, str] = signal.SIGKILL):
-            '''
-            This sends the given signal to the child application. In keeping
-            with UNIX tradition it has a misleading name. It does not necessarily
-            kill the child unless you send the right signal.
+    def kill(self, sig: Union[int, str] = signal.SIGKILL if os.name != 'nt' else signal.SIGTERM):
+        '''
+        This sends the given signal to the child application. In keeping
+        with UNIX tradition it has a misleading name. It does not necessarily
+        kill the child unless you send the right signal.
 
-            ``sig`` is the number of the signal, also, can be the name of the signal. The following 2 lines are equal:
+        ``sig`` is the number of the signal, also, can be the name of the signal. The following 2 lines are equal:
 
-            | `Kill` | SIGKILL |
-            | `Kill` | 9 |
-            '''
-            try:
-                sig = int(sig)
-            except ValueError:
-                sig = signal.__dict__[str(sig)].value
-            return self._check_and_run(lambda: self._proc.kill(sig))
+        | `Kill` | SIGKILL |
+        | `Kill` | 9 |
+
+        The default value of ``sig`` is SIGTERM on Windows, and SIGKILL on other platforms.
+        '''
+        try:
+            sig = int(sig)
+        except ValueError:
+            sig = signal.__dict__[str(sig)].value
+        return self._check_and_run(lambda: self._proc.kill(sig))
 
     def terminate(self, force: bool = False):
         '''This forces a child process to terminate. It starts nicely with
