@@ -11,6 +11,7 @@ from PexpectLibrary.serialspawn import SerialSpawn
 
 __version__ = "0.2.0"
 
+
 class PexpectLibrary(object):
     '''
     PexpetLibrary is a Pexpect wrapper for Robot Framework.
@@ -423,6 +424,16 @@ class PexpectLibrary(object):
         '''Returns the `delayafterterminate' attribute.'''
         self._check_proc()
         return self._proc.delayafterterminate
+
+    def set_line_separator(self, value):
+        '''Change the value of `linesep' attribute (line separator).'''
+        self._check_proc()
+        self._proc.linesep = value
+
+    def get_line_separator(self):
+        '''Returns the `linesep' attribute (line separator).'''
+        self._check_proc()
+        return self._proc.linesep
 
     def set_timeout(self, value: Optional[timedelta]):
         '''Change the value of `timeout' attribute.'''
