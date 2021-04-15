@@ -31,6 +31,10 @@ Below is a list of missing functionalities from `pexpect`.
 
   This function use `pexpect.spawn` which only work in *nix platforms. It's better to use the built-in
 keyword `Process.Run Process`.
+  
+* `pexpect.spawn.interact()`
+  
+  This function is useless and difficult to implement due to Robot Framework's standard streams restriction. 
 
 * class `pexpect.replwrap.REPLWrapper`
   

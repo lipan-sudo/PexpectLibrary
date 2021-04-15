@@ -758,37 +758,6 @@ class PexpectLibrary(object):
         '''
         return self._check_and_run(lambda: self._proc.eof())
 
-    def interact(self, escape_character=chr(29),
-                 input_filter=None, output_filter=None):
-        '''This gives control of the child process to the interactive user (the
-        human at the keyboard). Keystrokes are sent to the child process, and
-        the stdout and stderr output of the child process is printed. This
-        simply echos the child stdout and child stderr to the real stdout and
-        it echos the real stdin to the child stdin. When the user types the
-        escape_character this keyword will return None. The escape_character
-        will not be transmitted.  The default for escape_character is
-        entered as ``Ctrl - ]``, the very same as BSD telnet. To prevent
-        escaping, escape_character may be set to None.
-
-        If a logfile is specified, then the data sent and received from the
-        child process in interact mode is duplicated to the given log.
-
-        You may pass in optional input and output filter functions. These
-        functions should take bytes array and return bytes array too. Even
-        with ``encoding='utf-8'`` support, `Interact` will always pass
-        input_filter and output_filter bytes. You may need to wrap your
-        function to decode and encode back to UTF-8.
-
-        The output_filter will be passed all the output from the child process.
-        The input_filter will be passed all the keyboard input from the user.
-        The input_filter is run BEFORE the check for the escape_character.
-
-        Note that if you change the window size of the parent the SIGWINCH
-        signal will not be passed through to the child.
-        '''
-        return self._check_and_run(lambda: self._proc.interact(escape_character,
-                                                               input_filter, output_filter))
-
     def get_logfile(self):
         '''Returns the `logfile' attribute.'''
         self._check_proc()
