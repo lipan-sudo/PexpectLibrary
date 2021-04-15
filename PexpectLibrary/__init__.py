@@ -11,6 +11,7 @@ from PexpectLibrary.serialspawn import SerialSpawn
 
 __version__ = "0.2.0"
 
+
 class PexpectLibrary(object):
     '''
     PexpetLibrary is a Pexpect wrapper for Robot Framework.
