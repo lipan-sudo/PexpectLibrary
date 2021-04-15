@@ -1,5 +1,11 @@
 An (almost) complete and convenience Pexpect wrapper for Robot Framework, with extra functionalities.
 
+Keyword Documentation
+---
+
+See [keyword documentation](https://lipan-sudo.github.io/PexpectLibrary/) for available keywords and more information about the library in general.
+
+
 Installation
 ---
 
