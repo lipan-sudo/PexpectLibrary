@@ -449,6 +449,11 @@ class PexpectLibrary(object):
         self._check_proc()
         return self._proc.match
 
+    def match_groups(self):
+        '''Returns the matched groups.'''
+        self._check_proc()
+        return self._proc.match.groups()
+
     def before(self):
         '''Returns the `before' attribute.'''
         self._check_proc()
