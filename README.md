@@ -1,3 +1,7 @@
+[![Downloads](https://pepy.tech/badge/pexpectlibrary)](https://pepy.tech/project/pexpectlibrary)
+[![Downloads](https://pepy.tech/badge/pexpectlibrary/month)](https://pepy.tech/project/pexpectlibrary)
+[![Downloads](https://pepy.tech/badge/pexpectlibrary/week)](https://pepy.tech/project/pexpectlibrary)
+
 An (almost) complete and convenience Pexpect wrapper for Robot Framework, with extra functionalities.
 
 Keyword Documentation
